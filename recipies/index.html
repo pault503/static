@@ -1,0 +1,1164 @@
+```html
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lean Nutrition & Meal Planner</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #020617;
+      color: #e2e8f0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Smooth custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b1120;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+    .recipe-accordion {
+      transition: max-height 0.35s ease-in-out, opacity 0.3s ease-in-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- Top Navigation Header (Always Visible & Flex Wrapped) -->
+  <header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-950/40 text-white font-black text-lg">
+          <i class="fa-solid fa-fire-flame-curved"></i>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            Lean Macro Planner
+            <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Deficit Hub</span>
+          </h1>
+          <p class="text-xs text-slate-400 hidden sm:block">Standardized tbsp & mL measurements • High satiety fat loss</p>
+        </div>
+      </div>
+
+      <!-- Quick Status Metric for Mobile/Desktop -->
+      <div class="flex items-center gap-2 bg-slate-950/60 border border-slate-800 px-3 py-1.5 rounded-xl">
+        <span class="text-xs text-slate-400 font-medium">Daily Budget:</span>
+        <span id="nav-cal-badge" class="text-xs font-bold text-emerald-400">~1,245 kcal</span>
+      </div>
+
+      <!-- Wrap-Friendly Nav Tabs (No Hidden Hamburgers) -->
+      <nav class="w-full md:w-auto flex flex-wrap items-center gap-1.5 pt-1 md:pt-0 border-t md:border-t-0 border-slate-800/80">
+        <button onclick="switchTab('view-planner')" id="tab-btn-planner" class="nav-tab px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all bg-emerald-500 text-slate-950 shadow-sm flex items-center gap-1.5">
+          <i class="fa-solid fa-calendar-day"></i> Day Planner
+        </button>
+        <button onclick="switchTab('view-smoothie')" id="tab-btn-smoothie" class="nav-tab px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-1.5">
+          <i class="fa-solid fa-blender"></i> Lean Smoothie
+        </button>
+        <button onclick="switchTab('view-shopping')" id="tab-btn-shopping" class="nav-tab px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-1.5">
+          <i class="fa-solid fa-basket-shopping"></i> Shopping List
+        </button>
+        <button onclick="switchTab('view-guide')" id="tab-btn-guide" class="nav-tab px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-1.5">
+          <i class="fa-solid fa-brain"></i> Satiety Guide
+        </button>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full flex-1">
+
+    <!-- ========================================================== -->
+    <!-- VIEW 1: INTERACTIVE DAY PLANNER                            -->
+    <!-- ========================================================== -->
+    <div id="view-planner" class="space-y-6">
+
+      <!-- Top Macro Summary Card -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
+        <div class="absolute -right-16 -top-16 w-52 h-52 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+              Live Macro Tracker
+            </span>
+            <h2 class="text-xl sm:text-2xl font-black text-white mt-1.5">Selected Daily Intake</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Calibrated for healthy fat loss with prolonged morning and evening satiety.</p>
+          </div>
+
+          <!-- Macro Metric Badges -->
+          <div class="grid grid-cols-3 gap-3 w-full md:w-auto">
+            <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex flex-col items-center justify-center text-center min-w-[90px]">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Calories</span>
+              <span id="metric-cal" class="text-lg sm:text-xl font-extrabold text-white mt-0.5">1,285</span>
+              <span class="text-[9px] text-slate-500">Target ~1,550</span>
+            </div>
+            <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex flex-col items-center justify-center text-center min-w-[90px]">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Protein</span>
+              <span id="metric-protein" class="text-lg sm:text-xl font-extrabold text-emerald-400 mt-0.5">105g</span>
+              <span class="text-[9px] text-slate-500">Min 90g</span>
+            </div>
+            <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex flex-col items-center justify-center text-center min-w-[90px]">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Dietary Fibre</span>
+              <span id="metric-fibre" class="text-lg sm:text-xl font-extrabold text-teal-400 mt-0.5">24g</span>
+              <span class="text-[9px] text-slate-500">Min 25g</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Trackers -->
+        <div class="mt-6 pt-5 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-slate-400 font-medium">Calorie Budget</span>
+              <span id="calorie-status" class="text-emerald-400 font-semibold text-[11px]"><i class="fa-solid fa-circle-check mr-1"></i> Deficit Optimal</span>
+            </div>
+            <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+              <div id="metric-cal-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-300" style="width: 82%;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-slate-400 font-medium">Muscle Preservation (Protein)</span>
+              <span class="text-slate-300 font-semibold text-[11px]">High Satiety</span>
+            </div>
+            <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+              <div id="metric-protein-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 95%;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-slate-400 font-medium">Gut & Glucose (Fibre)</span>
+              <span class="text-slate-300 font-semibold text-[11px]">Slow Transit</span>
+            </div>
+            <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
+              <div id="metric-fibre-bar" class="bg-teal-400 h-2 rounded-full transition-all duration-300" style="width: 85%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Snack Toggle Bar -->
+        <div class="mt-5 pt-4 border-t border-slate-800/60 flex items-center justify-between flex-wrap gap-3">
+          <label class="flex items-center gap-3 cursor-pointer group">
+            <input type="checkbox" id="check-snack" onchange="updatePlanner()" class="w-4 h-4 rounded text-emerald-500 accent-emerald-500 cursor-pointer">
+            <span class="text-xs font-medium text-slate-300 group-hover:text-white transition">Include Afternoon Snack (1 Pink Lady Apple or Handful Baby Carrots + Black Coffee)</span>
+          </label>
+          <span class="text-[11px] font-bold text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">+100 kcal • 4g Fibre</span>
+        </div>
+      </div>
+
+      <!-- 3-Column Meal Selector Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+        <!-- ================= MEAL 1: BREAKFAST ================= -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-lg space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div>
+              <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-wide">
+                Meal 1: Breakfast
+              </span>
+              <h3 class="font-bold text-white text-base mt-1">Lean Smoothie Formula</h3>
+            </div>
+            <span class="text-xs font-extrabold text-emerald-400 bg-slate-950 px-2.5 py-1 rounded-xl border border-slate-800">
+              ~405 kcal
+            </span>
+          </div>
+
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Formulated specifically for sustained morning energy without reactive hypoglycemia. Measured in metric tablespoons and mL.
+          </p>
+
+          <!-- Single Lean Breakfast Card -->
+          <div class="p-3.5 rounded-2xl border border-emerald-500/70 bg-emerald-950/20 text-slate-200 space-y-3">
+            <div class="flex items-start justify-between">
+              <div>
+                <h4 class="font-bold text-white text-sm flex items-center gap-2">
+                  <i class="fa-solid fa-blender text-emerald-400"></i> Optimised Lean Smoothie
+                </h4>
+                <p class="text-xs text-slate-400 mt-1">
+                  Soy milk, rolled oats, chia, nuts, 1/2 banana, ice whip (0 dates/sultanas).
+                </p>
+              </div>
+              <span class="text-[11px] font-bold text-emerald-400">405 kcal</span>
+            </div>
+
+            <!-- Standardized Measurement Badges -->
+            <div class="flex flex-wrap gap-1.5 text-[10px] font-semibold text-slate-300">
+              <span class="bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">250 mL Soy</span>
+              <span class="bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">3 tbsp Oats</span>
+              <span class="bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">1 tbsp Chia</span>
+              <span class="bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">4 tbsp Banana</span>
+            </div>
+
+            <!-- Direct Recipe Placement Directly Below Breakfast -->
+            <div id="recipe-box-smoothie-ideal" class="pt-3 border-t border-slate-800 text-xs">
+              <!-- Dynamically populated on load -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= MEAL 2: LUNCH ================= -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-lg space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div>
+              <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wide">
+                Meal 2: Lunch
+              </span>
+              <h3 class="font-bold text-white text-base mt-1">Midday Crunch Bowl</h3>
+            </div>
+            <span class="text-xs text-slate-400 font-semibold">High Chew Factor</span>
+          </div>
+
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Click any meal to select it. The full recipe and instructions expand <strong>directly right below</strong> your selection.
+          </p>
+
+          <!-- Lunch Options with Accordion Beneath Each Option -->
+          <div class="space-y-3">
+
+            <!-- Lunch 1: Tuna & Cannellini -->
+            <div id="group-lunch-tuna" class="meal-group rounded-2xl border transition-all duration-200 border-emerald-500/70 bg-emerald-950/20">
+              <div onclick="selectAndInspectMeal('lunch', 'lunch-tuna')" class="cursor-pointer p-3.5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <input type="radio" name="select-lunch" value="lunch-tuna" checked class="accent-emerald-500 pointer-events-none">
+                  <span class="font-semibold text-white text-xs sm:text-sm">Tuna & Cannellini Bean Bowl</span>
+                </div>
+                <span class="text-xs font-bold text-emerald-400">370 kcal</span>
+              </div>
+              <div id="recipe-box-lunch-tuna" class="p-3.5 pt-0 border-t border-slate-800/80 mt-1">
+                <!-- Dynamically injected -->
+              </div>
+            </div>
+
+            <!-- Lunch 2: Costco Chicken & Slaw -->
+            <div id="group-lunch-chicken" class="meal-group rounded-2xl border transition-all duration-200 border-slate-800 bg-slate-800/40">
+              <div onclick="selectAndInspectMeal('lunch', 'lunch-chicken')" class="cursor-pointer p-3.5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <input type="radio" name="select-lunch" value="lunch-chicken" class="accent-emerald-500 pointer-events-none">
+                  <span class="font-medium text-slate-300 text-xs sm:text-sm">Costco Chicken & Coles Slaw</span>
+                </div>
+                <span class="text-xs font-bold text-slate-400">370 kcal</span>
+              </div>
+              <div id="recipe-box-lunch-chicken" class="hidden p-3.5 pt-0 border-t border-slate-800/80 mt-1">
+                <!-- Dynamically injected -->
+              </div>
+            </div>
+
+            <!-- Lunch 3: Tofu & Edamame -->
+            <div id="group-lunch-tofu" class="meal-group rounded-2xl border transition-all duration-200 border-slate-800 bg-slate-800/40">
+              <div onclick="selectAndInspectMeal('lunch', 'lunch-tofu')" class="cursor-pointer p-3.5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <input type="radio" name="select-lunch" value="lunch-tofu" class="accent-emerald-500 pointer-events-none">
+                  <span class="font-medium text-slate-300 text-xs sm:text-sm">Tofu & Edamame Brown Rice</span>
+                </div>
+                <span class="text-xs font-bold text-slate-400">465 kcal</span>
+              </div>
+              <div id="recipe-box-lunch-tofu" class="hidden p-3.5 pt-0 border-t border-slate-800/80 mt-1">
+                <!-- Dynamically injected -->
+              </div>
+            </div>
+
+            <!-- Lunch 4: Eggs & Cottage Cheese -->
+            <div id="group-lunch-eggs" class="meal-group rounded-2xl border transition-all duration-200 border-slate-800 bg-slate-800/40">
+              <div onclick="selectAndInspectMeal('lunch', 'lunch-eggs')" class="cursor-pointer p-3.5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <input type="radio" name="select-lunch" value="lunch-eggs" class="accent-emerald-500 pointer-events-none">
+                  <span class="font-medium text-slate-300 text-xs sm:text-sm">Boiled Eggs & Cottage Toast</span>
+                </div>
+                <span class="text-xs font-bold text-slate-400">395 kcal</span>
+              </div>
+              <div id="recipe-box-lunch-eggs" class="hidden p-3.5 pt-0 border-t border-slate-800/80 mt-1">
+                <!-- Dynamically injected -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ================= MEAL 3: DINNER ================= -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-lg space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div>
+              <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-wide">
+                Meal 3: Dinner
+              </span>
+              <h3 class="font-bold text-white text-base mt-1">Evening Satiety Anchor</h3>
+            </div>
+            <span class="text-xs text-slate-400 font-semibold">&gt;30g Protein</span>
+          </div>
+
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Click any dinner to select it. The full cooking method expands <strong>directly right below</strong> your selection.
+          </p>
+
+          <!-- Dinner Options with Accordion Beneath Each Option -->
+          <div class="space-y-3">
+
+            <!-- Dinner 1: Salmon -->
+            <div id="group-dinner-salmon" class="meal-group rounded-2xl border transition-all duration-200 border-emerald-500/70 bg-emerald-950/20">
+              <div onclick="selectAndInspectMeal('dinner', 'dinner-salmon')" class="cursor-pointer p-3.5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <input type="radio" name="select-dinner" value="dinner-salmon" checked class="accent-emerald-500 pointer-events-none">
+                  <span class="font-semibold text-white text-xs sm:text-sm">Crispy Salmon & Sweet Potato</span>
+                </div>
+                <span class="text-xs font-bold text-emerald-400">510 kcal</span>
+              </div>
+              <div id="recipe-box-dinner-salmon" class="p-3.5 pt-0 border-t border-slate-800/80 mt-1">
+                <!-- Dynamically injected -->
+              </div>
+            </div>
+
+            <!-- Dinner 2: Taco Burrito Bowl -->
+            <div id="group-dinner-burrito" class="meal-group rounded-2xl border transition-all duration-200 border-slate-800 bg-slate-800/40">
+              <div onclick="selectAndInspectMeal('dinner', 'dinner-burrito')" class="cursor-pointer p-3.5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <input type="radio" name="select-dinner" value="dinner-burrito" class="accent-emerald-500 pointer-events-none">
+                  <span class="font-medium text-slate-300 text-xs sm:text-sm">Lean Taco Bowl (Beef/Roo)</span>
+                </div>
+                <span class="text-xs font-bold text-slate-400">485 kcal</span>
+              </div>
+              <div id="recipe-box-dinner-burrito" class="hidden p-3.5 pt-0 border-t border-slate-800/80 mt-1">
+                <!-- Dynamically injected -->
+              </div>
+            </div>
+
+            <!-- Dinner 3: Chicken Stir-Fry -->
+            <div id="group-dinner-stirfry" class="meal-group rounded-2xl border transition-all duration-200 border-slate-800 bg-slate-800/40">
+              <div onclick="selectAndInspectMeal('dinner', 'dinner-stirfry')" class="cursor-pointer p-3.5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <input type="radio" name="select-dinner" value="dinner-stirfry" class="accent-emerald-500 pointer-events-none">
+                  <span class="font-medium text-slate-300 text-xs sm:text-sm">Chicken Breast & Rainbow Stir-Fry</span>
+                </div>
+                <span class="text-xs font-bold text-slate-400">420 kcal</span>
+              </div>
+              <div id="recipe-box-dinner-stirfry" class="hidden p-3.5 pt-0 border-t border-slate-800/80 mt-1">
+                <!-- Dynamically injected -->
+              </div>
+            </div>
+
+            <!-- Dinner 4: Tofu & Lentil Curry -->
+            <div id="group-dinner-curry" class="meal-group rounded-2xl border transition-all duration-200 border-slate-800 bg-slate-800/40">
+              <div onclick="selectAndInspectMeal('dinner', 'dinner-curry')" class="cursor-pointer p-3.5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <input type="radio" name="select-dinner" value="dinner-curry" class="accent-emerald-500 pointer-events-none">
+                  <span class="font-medium text-slate-300 text-xs sm:text-sm">Tofu & Red Lentil Curry</span>
+                </div>
+                <span class="text-xs font-bold text-slate-400">475 kcal</span>
+              </div>
+              <div id="recipe-box-dinner-curry" class="hidden p-3.5 pt-0 border-t border-slate-800/80 mt-1">
+                <!-- Dynamically injected -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- VIEW 2: LEAN SMOOTHIE FORMULA (TBS & ML STANDARDIZED)     -->
+    <!-- ========================================================== -->
+    <div id="view-smoothie" class="hidden space-y-6">
+
+      <div class="bg-slate-900 rounded-3xl p-5 sm:p-7 border border-slate-800 shadow-xl space-y-6">
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-1 rounded text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
+                Breakfast Architecture
+              </span>
+              <span class="text-xs text-slate-400">Scale-Free Morning Prep</span>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-black text-white mt-1">Optimised Lean Smoothie Formulation</h2>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-950 px-4 py-2 rounded-2xl border border-slate-800 text-xs font-bold text-emerald-400">
+            <i class="fa-solid fa-check-circle"></i> ~405 kcal • 18.5g Protein • Zero Crash
+          </div>
+        </div>
+
+        <!-- Ingredients Table in Tbsp and mL -->
+        <div class="overflow-x-auto rounded-2xl border border-slate-800">
+          <table class="w-full text-left text-xs sm:text-sm text-slate-300">
+            <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] font-bold border-b border-slate-800 tracking-wider">
+              <tr>
+                <th class="p-3 sm:p-4">Ingredient (Costco & Coles)</th>
+                <th class="p-3 sm:p-4">Standard Measure</th>
+                <th class="p-3 sm:p-4 text-right">Calories</th>
+                <th class="p-3 sm:p-4 text-right">Protein</th>
+                <th class="p-3 sm:p-4 text-right">Satiety Function</th>
+              </tr>
+            </thead>
+            <tbody id="smoothie-table-body" class="divide-y divide-slate-800/80 bg-slate-900/50">
+              <!-- Dynamically populated via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Preparation and Routine Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
+          
+          <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+            <h3 class="font-bold text-white text-sm flex items-center gap-2">
+              <i class="fa-solid fa-list-ol text-emerald-400"></i> 60-Second Measuring Routine
+            </h3>
+            <ol class="text-xs text-slate-300 space-y-2 list-decimal list-inside leading-relaxed">
+              <li><strong>Liquid Base:</strong> Pour <strong>250 mL</strong> So Good High Protein Soy Milk directly into the cup.</li>
+              <li><strong>Soluble Fibre:</strong> Add <strong>3 level tbsp</strong> rolled oats and <strong>1 level tbsp (15 mL)</strong> chia seeds.</li>
+              <li><strong>Healthy Fats:</strong> Add <strong>1 tbsp</strong> chopped Costco walnuts/almonds and <strong>0.5 tbsp</strong> pumpkin seeds.</li>
+              <li><strong>Fruit & Spice:</strong> Add <strong>4 tbsp sliced banana</strong> (1/2 banana, frozen gives milkshake texture) and a pinch of ground cinnamon.</li>
+              <li><strong>Volume Hack:</strong> Add <strong>75 mL cold water</strong> and <strong>4–5 ice cubes</strong> on top.</li>
+              <li><strong>Blend:</strong> Run high-speed blend for 50 seconds to whip the ice and chia into thick foam.</li>
+            </ol>
+          </div>
+
+          <div class="p-5 rounded-2xl bg-emerald-950/20 border border-emerald-500/20 space-y-3">
+            <h3 class="font-bold text-emerald-400 text-sm flex items-center gap-2">
+              <i class="fa-solid fa-shield-halved"></i> Why Cutting Dried Fruit Prevents Hunger
+            </h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              <strong>The Problem with Dates & Sultanas:</strong> Dried fruit consists of dense simple fructose and glucose without cellular moisture. When blended, these sugars enter your bloodstream in minutes, prompting an immediate surge of insulin.
+            </p>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              By minute 90–120, blood sugar plummets below baseline (<strong>reactive hypoglycemia</strong>), generating artificial brain-level hunger panic.
+            </p>
+            <p class="text-xs text-emerald-400 font-medium">
+              Eliminating the dates/sultanas cuts ~180 unnecessary sugary calories while <em>extending</em> your energy stability all the way to lunchtime.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- VIEW 3: COLES & COSTCO SHOPPING LIST                       -->
+    <!-- ========================================================== -->
+    <div id="view-shopping" class="hidden space-y-6">
+
+      <div class="bg-slate-900 rounded-3xl p-5 sm:p-7 border border-slate-800 shadow-xl space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+          <div>
+            <span class="px-2.5 py-1 rounded text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
+              Weekly Pantry & Fridge
+            </span>
+            <h2 class="text-xl sm:text-2xl font-black text-white mt-1">Coles & Costco Master Shopping List</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Aligned with all recipes, breakfast formulation, and midday snacks.</p>
+          </div>
+          <button onclick="resetShoppingList()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 bg-slate-950 border border-slate-800 hover:text-white hover:border-slate-700 transition flex items-center gap-2 self-start sm:self-center">
+            <i class="fa-solid fa-arrow-rotate-left"></i> Reset Checkboxes
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+          <!-- Card 1: Costco Bulk Staples -->
+          <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+              <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                <i class="fa-solid fa-warehouse text-amber-400"></i> Costco Wholesale (Bulk)
+              </h3>
+              <span class="text-[10px] text-slate-400">Monthly / Bi-weekly</span>
+            </div>
+            <ul class="text-xs text-slate-300 space-y-2">
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Kirkland Raw Walnuts</strong> (1.36kg bag)</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Kirkland Raw Almonds</strong> (1.36kg bag)</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Kirkland Chia Seeds</strong> (1kg bag)</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Atlantic Salmon Fillet Portions</strong> (Fresh or Frozen)</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Costco Rotisserie Chicken</strong> OR Skinless Breasts</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Hass Avocados</strong> (Bag of 5)</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Extra Virgin Olive Oil</strong> (Kirkland 100% Italian)</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Card 2: Coles Fresh Produce & Chilled Dairy -->
+          <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+              <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                <i class="fa-solid fa-leaf text-emerald-400"></i> Coles Fresh & Chilled
+              </h3>
+              <span class="text-[10px] text-slate-400">Weekly Replenish</span>
+            </div>
+            <ul class="text-xs text-slate-300 space-y-2">
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>So Good High Protein Soy Milk</strong> (1L cartons, 10g pro/cup)</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Coles Fresh Bananas</strong> (Freeze half peeled)</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Coles Crunchy Slaw Mix</strong> (Cabbage & carrot, no dressing)</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Baby Spinach & Rocket Bags</strong></span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Coles Organic Firm Tofu</strong> (375g block)</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Coles Low-Fat Cottage Cheese</strong> & 0.5% Chobani Greek Yoghurt</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>5-Star Extra Lean Beef Mince</strong> or Kangaroo Mince</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Sweet Potatoes, Asparagus, Broccoli & Lemons</strong></span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Card 3: Coles Pantry & Dry Staples -->
+          <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+              <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                <i class="fa-solid fa-box-open text-blue-400"></i> Coles Pantry Aisle
+              </h3>
+              <span class="text-[10px] text-slate-400">Dry & Canned</span>
+            </div>
+            <ul class="text-xs text-slate-300 space-y-2">
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Coles Simply Rolled Oats</strong> (1kg bag)</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Wellness Road Pumpkin Seeds (Pepitas)</strong></span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Coles Tuna in Springwater</strong> (185g cans)</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Cannellini Beans & Black Beans</strong> (400g cans)</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Burgen Soy-Lin Bread</strong> OR Helga's Lower Carb 5 Seeds</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Frozen Shelled Edamame</strong> & Microwave Brown Rice Cups</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Red Split Lentils & Light Coconut Milk</strong></span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 accent-emerald-500 rounded cursor-pointer">
+                <span><strong>Ground Cinnamon, Dijon Mustard & Low-Sodium Tamari</strong></span>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- VIEW 4: SATIETY & WEIGHT LOSS PHYSIOLOGY GUIDE             -->
+    <!-- ========================================================== -->
+    <div id="view-guide" class="hidden space-y-6">
+
+      <div class="bg-slate-900 rounded-3xl p-5 sm:p-7 border border-slate-800 shadow-xl space-y-6">
+        
+        <div class="border-b border-slate-800 pb-5">
+          <span class="px-2.5 py-1 rounded text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
+            Nutritional Science
+          </span>
+          <h2 class="text-xl sm:text-2xl font-black text-white mt-1">Why This Eating Protocol Works</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Understanding satiety hormones, chew mechanics, and metabolic fat loss.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <!-- Principle 1 -->
+          <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5">
+            <div class="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold text-sm">1</div>
+            <h3 class="font-bold text-white text-sm">Liquid vs Solid Digestion (The Lunch Chew Rule)</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Because your breakfast is blended, its stomach clearance rate is naturally faster than whole food. To keep hunger subdued, <strong>lunch must mandate vigorous chewing</strong> (such as raw cabbage slaw, crisp cucumbers, and fibrous beans). Chewing stimulates trigeminal jaw mechanoreceptors that send direct fullness signals to your hypothalamus.
+            </p>
+          </div>
+
+          <!-- Principle 2 -->
+          <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5">
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-sm">2</div>
+            <h3 class="font-bold text-white text-sm">Chia Mucilage & Gastric Stretch</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Chia seeds absorb 10–12 times their weight in moisture, forming a thick gel within the stomach chamber. This triggers the stomach’s vagus nerve stretch receptors, notifying your brain that the organ is physically full without requiring excess calories.
+            </p>
+          </div>
+
+          <!-- Principle 3 -->
+          <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5">
+            <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold text-sm">3</div>
+            <h3 class="font-bold text-white text-sm">Thermogenesis of Protein Anchor (&gt;100g Daily)</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Protein has a Thermic Effect of Food (TEF) of 20–30%, meaning your body burns up to 30 calories simply breaking down and assimilating every 100 calories of lean protein you consume. Combining high-protein soy, lean tuna, chicken, and tofu keeps metabolic expenditure elevated.
+            </p>
+          </div>
+
+          <!-- Principle 4 -->
+          <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5">
+            <div class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold text-sm">4</div>
+            <h3 class="font-bold text-white text-sm">Prebiotic Fermentation for Morning Fullness</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Dinners featuring red lentils, black beans, or sweet potato provide resistant starch that escapes small intestine digestion. Gut bacteria ferment this fibre overnight into Short-Chain Fatty Acids (SCFAs), maintaining peptide YY levels so you wake up feeling calm and satiated.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    // Comprehensive Recipe Database for Direct Inline Placement Under Each Card
+    const recipeEncyclopedia = {
+      'smoothie-ideal': {
+        title: "Optimised Lean Smoothie",
+        tag: "Breakfast • Lean Deficit Formula",
+        tagColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+        cal: "405 kcal",
+        protein: "18.5g Protein",
+        fibre: "8.0g Fibre",
+        ingredients: [
+          "<strong>250 mL</strong> So Good High Protein Soy Milk (10g protein)",
+          "<strong>3 level tbsp</strong> Coles Simply Rolled Oats (~25g)",
+          "<strong>1 level tbsp (15 mL)</strong> Chia Seeds (~10g)",
+          "<strong>4 tbsp sliced</strong> Banana (1/2 medium banana, frozen is best)",
+          "<strong>1 tbsp chopped</strong> Raw Walnuts or Almonds (Costco bulk)",
+          "<strong>0.5 tbsp</strong> Wellness Road Pumpkin Seeds (Pepitas)",
+          "<strong>75 mL</strong> Cold Water + <strong>4–5 Ice Cubes</strong> (volume thickness)",
+          "<strong>0.25 tbsp</strong> Ground Cinnamon (blood sugar regulation)"
+        ],
+        steps: [
+          "Pour 250 mL soy milk directly into blender cup.",
+          "Add oats, chia seeds, pumpkin seeds, chopped nuts, and sliced banana.",
+          "Add 75 mL cold water and 4–5 ice cubes on top.",
+          "Blend on high for 45–60 seconds until whipped and creamy like a milkshake."
+        ],
+        whyItWorks: "Cutting dates and sultanas stops post-breakfast reactive hypoglycemia (sugar crash at 90 mins). Chia mucilage gel and ice whipping create massive gastric stretch with minimal calories."
+      },
+      'lunch-tuna': {
+        title: "Tuna & Cannellini Bean Salad Bowl",
+        tag: "Lunch • No-Cook Fast Prep (5 Mins)",
+        tagColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+        cal: "370 kcal",
+        protein: "47.5g Protein",
+        fibre: "8.5g Fibre",
+        ingredients: [
+          "<strong>1 large tin (185g)</strong> Coles tuna in springwater (drained well)",
+          "<strong>1/2 can (120g)</strong> Cannellini beans or chickpeas (rinsed & drained)",
+          "<strong>2 packed cups</strong> Coles baby spinach leaves or rocket",
+          "<strong>1 cup</strong> Diced Lebanese cucumber & sweet cherry tomatoes",
+          "<strong>1 tsp (5 mL)</strong> Extra virgin olive oil + fresh lemon juice",
+          "Sea salt, cracked black pepper & 1/2 tsp Dijon mustard"
+        ],
+        steps: [
+          "Drain tuna tin thoroughly and flake into a large meal prep bowl.",
+          "Rinse cannellini beans under cold water and add with fresh spinach.",
+          "Toss in diced cucumber and halved cherry tomatoes.",
+          "Whisk 1 tsp olive oil with lemon juice and Dijon mustard; drizzle over salad."
+        ],
+        whyItWorks: "Lean tuna albumin plus bean soluble fibre creates dense, long-lasting fullness. High crunch volume forces prolonged chewing."
+      },
+      'lunch-chicken': {
+        title: "Costco Chicken & Coles Slaw Crunch Bowl",
+        tag: "Lunch • High Mastication & Crunch",
+        tagColor: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+        cal: "370 kcal",
+        protein: "42.4g Protein",
+        fibre: "6.0g Fibre",
+        ingredients: [
+          "<strong>130g</strong> Skinless shredded roast chicken breast (Costco or Coles)",
+          "<strong>2 cups (150g)</strong> Coles crunchy slaw mix (cabbage & carrot, no dressing)",
+          "<strong>1/4 medium (35g)</strong> Hass avocado, diced",
+          "<strong>2 tbsp (40g)</strong> Chobani 0.5% Greek yoghurt (dressing base)",
+          "<strong>2 pieces</strong> Wholegrain Corn Thins or Ryvita (crumbled on top)",
+          "Lemon juice, garlic powder, salt & chopped dill"
+        ],
+        steps: [
+          "Shred cold or warmed skinless chicken breast into bite-sized pieces.",
+          "Place raw cabbage slaw into bowl as the crunchy high-volume base.",
+          "Mix Greek yoghurt with lemon juice, garlic powder, and salt for creamy dressing.",
+          "Top with diced avocado, toss, and crumble 2 Corn Thins over the top for crunch."
+        ],
+        whyItWorks: "Raw cabbage has the highest chew-to-calorie ratio of any vegetable, activating jaw mechanoreceptors that send satiety signals to the hypothalamus."
+      },
+      'lunch-tofu': {
+        title: "Warm Tofu & Edamame Brown Rice Bowl",
+        tag: "Lunch • 100% Plant-Based Protein",
+        tagColor: "bg-teal-500/20 text-teal-400 border-teal-500/30",
+        cal: "465 kcal",
+        protein: "33.5g Protein",
+        fibre: "9.0g Fibre",
+        ingredients: [
+          "<strong>150g</strong> Coles organic firm tofu, pressed and cubed",
+          "<strong>1/2 cup (75g)</strong> Frozen shelled edamame beans (steamed/microwaved)",
+          "<strong>1/2 cup (100g)</strong> Microwave brown rice or quinoa cup",
+          "<strong>1.5 cups</strong> Steamed broccoli florets or Asian bok choy",
+          "<strong>1 tbsp (15 mL)</strong> Low-sodium tamari or soy sauce + sriracha"
+        ],
+        steps: [
+          "Cube firm tofu and sear in a dry non-stick pan or air-fry at 200°C for 10 mins until golden.",
+          "Microwave frozen edamame and brown rice cup for 60 seconds.",
+          "Steam broccoli or bok choy until bright green and tender-crisp.",
+          "Assemble in bowl and drizzle with tamari and sriracha."
+        ],
+        whyItWorks: "Soy isoflavones and complete plant amino acids from tofu + edamame paired with whole grain brown rice provide slow, steady glucose release."
+      },
+      'lunch-eggs': {
+        title: "Boiled Eggs & Cottage Cheese Toast",
+        tag: "Lunch • Fast WFH Comfort Meal",
+        tagColor: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+        cal: "395 kcal",
+        protein: "32.3g Protein",
+        fibre: "7.5g Fibre",
+        ingredients: [
+          "<strong>2 slices</strong> Burgen Soy-Lin OR Helga's Lower Carb 5 Seeds bread",
+          "<strong>2 large eggs</strong>, hard-boiled or soft-poached",
+          "<strong>3 tbsp (60g)</strong> Coles low-fat cottage cheese",
+          "<strong>1 cup</strong> Sliced Lebanese cucumber and ripe vine tomato",
+          "Flaky sea salt, cracked black pepper & red chilli flakes"
+        ],
+        steps: [
+          "Toast bread slices until crisp.",
+          "Spread 3 tbsp of cottage cheese evenly across the hot toast.",
+          "Slice boiled eggs and lay them on top of the cottage cheese.",
+          "Season generously with sea salt, pepper, and chilli flakes; serve with fresh cucumber slices."
+        ],
+        whyItWorks: "Cottage cheese provides slow-digesting micellar casein protein, keeping peptide YY satiety hormones elevated throughout the afternoon."
+      },
+      'dinner-salmon': {
+        title: "Crispy Salmon, Asparagus & Sweet Potato",
+        tag: "Dinner • Omega-3 & Anti-Inflammatory",
+        tagColor: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+        cal: "510 kcal",
+        protein: "39.0g Protein",
+        fibre: "7.0g Fibre",
+        ingredients: [
+          "<strong>140g</strong> Atlantic salmon fillet, skin-on (Costco or Coles)",
+          "<strong>150g</strong> Orange sweet potato, cut into 1.5cm cubes",
+          "<strong>1 bunch (150g)</strong> Fresh asparagus spears, woody ends trimmed",
+          "<strong>1 cup</strong> Steamed broccoli florets with squeeze of lemon",
+          "<strong>1 tsp (5 mL)</strong> Extra virgin olive oil for roasting"
+        ],
+        steps: [
+          "Toss sweet potato cubes in 1/2 tsp oil and air-fry or oven-bake at 200°C for 18 mins.",
+          "Season salmon skin with sea salt; place skin-side down in a hot pan for 4–5 mins until skin is super crispy, flip for 2 mins.",
+          "In the same pan, sear asparagus spears for 3 minutes until tender and charred.",
+          "Plate together with steamed broccoli and a fresh squeeze of lemon juice."
+        ],
+        whyItWorks: "Marine omega-3 fatty acids (EPA/DHA) stimulate cholecystokinin (CCK) release in the duodenum, shutting down evening hunger pathways."
+      },
+      'dinner-burrito': {
+        title: "Lean Taco Burrito Bowl (Beef or Roo)",
+        tag: "Dinner • High-Iron & Zinc Power Plate",
+        tagColor: "bg-red-500/20 text-red-400 border-red-500/30",
+        cal: "485 kcal",
+        protein: "41.5g Protein",
+        fibre: "10.0g Fibre",
+        ingredients: [
+          "<strong>150g</strong> Coles 5-Star Extra Lean Beef Mince OR Kangaroo Mince (<2% fat)",
+          "<strong>1/3 can (80g)</strong> Black beans, rinsed and drained",
+          "<strong>2 large cups</strong> Crisp shredded cos lettuce (crunch bowl foundation)",
+          "<strong>3 tbsp (45g)</strong> Mild tomato salsa (Coles brand)",
+          "<strong>1/4 medium (35g)</strong> Hass avocado, diced",
+          "<strong>1 tbsp</strong> Chobani 0.5% Greek yoghurt (sour cream substitute)",
+          "Ground cumin, smoked paprika, garlic powder & lime juice"
+        ],
+        steps: [
+          "Brown mince in a hot non-stick skillet; season with cumin, paprika, garlic powder, salt, and 2 tbsp water.",
+          "Stir in rinsed black beans during the final minute to warm through.",
+          "Fill a wide bowl with 2 cups of shredded cos lettuce.",
+          "Top with warm spiced mince, black beans, salsa, diced avocado, and Greek yoghurt."
+        ],
+        whyItWorks: "At 10g fibre and 41.5g protein, this bowl provides heavy gastric volume that completely shuts down late-night cravings."
+      },
+      'dinner-stirfry': {
+        title: "Chicken Breast & Rainbow Stir-Fry",
+        tag: "Dinner • Rapid 15-Min Low-Calorie Volume",
+        tagColor: "bg-teal-500/20 text-teal-400 border-teal-500/30",
+        cal: "420 kcal",
+        protein: "44.0g Protein",
+        fibre: "8.0g Fibre",
+        ingredients: [
+          "<strong>160g</strong> Skinless chicken breast tenderloins, sliced into thin strips",
+          "<strong>2 cups</strong> Coles fresh stir-fry veg kit (capsicum, baby corn, bok choy)",
+          "<strong>1 packet (150g)</strong> Slendier Konjac noodles (rinsed) OR 1/2 cup vermicelli",
+          "<strong>1 tbsp (15 mL)</strong> Oyster sauce or tamari + fresh grated ginger & garlic",
+          "<strong>1 tsp (5 mL)</strong> Toasted sesame oil (drizzled at the end for aroma)"
+        ],
+        steps: [
+          "Rinse konjac noodles under hot running water for 1 minute to refresh.",
+          "Sear chicken strips in a smoking hot wok or skillet for 3–4 mins until lightly browned.",
+          "Toss in fresh rainbow vegetables and stir-fry vigorously for 3 mins.",
+          "Add noodles, oyster sauce, garlic, and ginger; toss together and drizzle with sesame oil."
+        ],
+        whyItWorks: "Konjac glucomannan expands in the stomach without adding digestible carbohydrates, yielding an enormous dinner plate for only 420 calories."
+      },
+      'dinner-curry': {
+        title: "Tofu & Red Lentil Coconut Curry",
+        tag: "Dinner • Hearty Warming Plant Protein",
+        tagColor: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+        cal: "475 kcal",
+        protein: "31.0g Protein",
+        fibre: "11.5g Fibre",
+        ingredients: [
+          "<strong>120g</strong> Coles organic firm tofu, pressed and cubed",
+          "<strong>1/3 cup (60g cooked)</strong> Red split lentils, rinsed",
+          "<strong>50 mL</strong> Light coconut milk + 1 tbsp yellow curry paste",
+          "<strong>1 cup</strong> Cauliflower florets + 1 cup baby spinach leaves",
+          "<strong>1/3 cup (70g)</strong> Steamed basmati rice (or 1 cup cauliflower rice for lower carbs)"
+        ],
+        steps: [
+          "Simmer red lentils and cauliflower florets in 150 mL vegetable broth for 10 mins until soft.",
+          "Stir in yellow curry paste, light coconut milk, and firm tofu cubes; simmer for 5 mins.",
+          "Fold in fresh baby spinach leaves until wilted.",
+          "Serve steaming hot over a modest portion of steamed basmati rice."
+        ],
+        whyItWorks: "Lentils contain high amounts of fermentable prebiotic fibre that produces short-chain fatty acids (SCFAs), maintaining morning satiety long into the next day."
+      }
+    };
+
+    // Helper to generate formatted HTML for any recipe directly below its selector
+    function getRecipeHTML(recipeKey) {
+      const recipe = recipeEncyclopedia[recipeKey];
+      if (!recipe) return '';
+
+      return `
+        <div class="space-y-2.5 pt-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${recipe.tagColor}">
+              ${recipe.tag}
+            </span>
+            <span class="text-[10px] font-bold text-emerald-400">${recipe.protein} • ${recipe.fibre}</span>
+          </div>
+
+          <!-- Ingredients List with Measures -->
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800/80">
+            <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1 flex items-center gap-1">
+              <i class="fa-solid fa-list-check text-emerald-400 text-[10px]"></i> Ingredients:
+            </div>
+            <ul class="text-[11px] text-slate-300 space-y-1">
+              ${recipe.ingredients.map(ing => `<li>• ${ing}</li>`).join('')}
+            </ul>
+          </div>
+
+          <!-- Step-by-Step Directions -->
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800/80">
+            <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1 flex items-center gap-1">
+              <i class="fa-solid fa-fire text-amber-400 text-[10px]"></i> Method:
+            </div>
+            <ol class="text-[11px] text-slate-300 space-y-1 list-decimal list-inside">
+              ${recipe.steps.map(step => `<li class="leading-relaxed">${step}</li>`).join('')}
+            </ol>
+          </div>
+
+          <!-- Satiety Factor -->
+          <div class="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/20 text-[10px] text-slate-300 leading-snug">
+            <span class="font-bold text-emerald-400 block mb-0.5"><i class="fa-solid fa-lightbulb mr-1"></i> Satiety Factor:</span>
+            ${recipe.whyItWorks}
+          </div>
+        </div>
+      `;
+    }
+
+    // Select meal and expand its recipe directly right below that specific item
+    function selectAndInspectMeal(mealType, mealValue) {
+      // 1. Select the radio input
+      const radio = document.querySelector(`input[name="select-${mealType}"][value="${mealValue}"]`);
+      if (radio) {
+        radio.checked = true;
+        updatePlanner();
+      }
+
+      // 2. Hide other recipe boxes in this meal type column and show the selected one
+      const mealKeys = (mealType === 'lunch')
+        ? ['lunch-tuna', 'lunch-chicken', 'lunch-tofu', 'lunch-eggs']
+        : ['dinner-salmon', 'dinner-burrito', 'dinner-stirfry', 'dinner-curry'];
+
+      mealKeys.forEach(key => {
+        const box = document.getElementById('recipe-box-' + key);
+        const group = document.getElementById('group-' + key);
+        if (box && group) {
+          if (key === mealValue) {
+            box.classList.remove('hidden');
+            box.innerHTML = getRecipeHTML(key);
+            group.classList.add('border-emerald-500/70', 'bg-emerald-950/20');
+            group.classList.remove('border-slate-800', 'bg-slate-800/40');
+          } else {
+            box.classList.add('hidden');
+            group.classList.remove('border-emerald-500/70', 'bg-emerald-950/20');
+            group.classList.add('border-slate-800', 'bg-slate-800/40');
+          }
+        }
+      });
+    }
+
+    // Smoothie Nutritional Data Model (Optimised Lean Only)
+    const smoothieIdealData = [
+      { name: "So Good High Protein Soy Milk", measure: "250 mL (1 cup)", cal: 150, pro: 10.0, why: "Slows gastric emptying via plant albumin" },
+      { name: "Rolled Oats (Coles Simply)", measure: "3 level tbsp (~25g)", cal: 95, pro: 3.5, why: "Beta-glucan soluble viscous fibre" },
+      { name: "Chia Seeds (Kirkland / Coles)", measure: "1 level tbsp (15 mL / 10g)", cal: 50, pro: 1.8, why: "Forms expanding gel matrix (10x water)" },
+      { name: "Banana (Frozen Slices)", measure: "4 tbsp (1/2 banana)", cal: 50, pro: 0.6, why: "Natural potassium, modest sweetness" },
+      { name: "Walnuts OR Almonds (Costco)", measure: "1 tbsp chopped (~5g)", cal: 35, pro: 1.0, why: "Triggers CCK fullness hormone in duodenum" },
+      { name: "Pumpkin Seeds (Pepitas)", measure: "0.5 tbsp (7.5 mL / 4g)", cal: 22, pro: 1.4, why: "Zinc & magnesium micronutrients" },
+      { name: "Pitted Dates & Sultanas", measure: "0 tbsp (Omitted)", cal: 0, pro: 0.0, why: "Prevents 90-min reactive sugar crash" },
+      { name: "Cold Water + 5 Ice Cubes", measure: "75 mL (Volume whip)", cal: 0, pro: 0.0, why: "Whips volume into gastric stretch signal" },
+      { name: "Ground Cinnamon", measure: "0.25 tbsp (1/2 tsp)", cal: 3, pro: 0.0, why: "Assists insulin sensitivity" }
+    ];
+
+    function renderSmoothieTable() {
+      const tbody = document.getElementById('smoothie-table-body');
+      if (!tbody) return;
+
+      tbody.innerHTML = '';
+      let totCal = 0;
+      let totPro = 0;
+
+      smoothieIdealData.forEach(item => {
+        totCal += item.cal;
+        totPro += item.pro;
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-900/80 transition";
+        tr.innerHTML = `
+          <td class="p-3 sm:p-4 font-medium text-slate-200">${item.name}</td>
+          <td class="p-3 sm:p-4 text-emerald-400 font-semibold">${item.measure}</td>
+          <td class="p-3 sm:p-4 font-bold text-right text-white">${item.cal} kcal</td>
+          <td class="p-3 sm:p-4 font-medium text-right text-teal-400">${item.pro.toFixed(1)} g</td>
+          <td class="p-3 sm:p-4 text-xs text-slate-400 text-right hidden sm:table-cell">${item.why}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Total row
+      const trTot = document.createElement('tr');
+      trTot.className = "bg-slate-950 font-bold border-t border-slate-700 text-white";
+      trTot.innerHTML = `
+        <td class="p-3 sm:p-4 text-emerald-400">Total Formula</td>
+        <td class="p-3 sm:p-4 text-slate-400">—</td>
+        <td class="p-3 sm:p-4 font-black text-right text-emerald-400 text-sm">~${totCal} kcal</td>
+        <td class="p-3 sm:p-4 font-black text-right text-white text-sm">~${totPro.toFixed(1)} g</td>
+        <td class="p-3 sm:p-4 text-right text-xs text-slate-400 hidden sm:table-cell">Optimal Deficit</td>
+      `;
+      tbody.appendChild(trTot);
+    }
+
+    // Nutritional Database for Live Planner
+    const mealsData = {
+      breakfast: {
+        'smoothie-ideal': { cal: 405, pro: 18.3, fibre: 8.0 }
+      },
+      lunch: {
+        'lunch-tuna': { cal: 370, pro: 47.5, fibre: 8.5 },
+        'lunch-chicken': { cal: 370, pro: 42.4, fibre: 6.0 },
+        'lunch-tofu': { cal: 465, pro: 33.5, fibre: 9.0 },
+        'lunch-eggs': { cal: 395, pro: 32.3, fibre: 7.5 }
+      },
+      dinner: {
+        'dinner-salmon': { cal: 510, pro: 39.0, fibre: 7.0 },
+        'dinner-burrito': { cal: 485, pro: 41.5, fibre: 10.0 },
+        'dinner-stirfry': { cal: 420, pro: 44.0, fibre: 8.0 },
+        'dinner-curry': { cal: 475, pro: 31.0, fibre: 11.5 }
+      }
+    };
+
+    function updatePlanner() {
+      const bfastVal = 'smoothie-ideal';
+      const lunchVal = document.querySelector('input[name="select-lunch"]:checked')?.value || 'lunch-tuna';
+      const dinnerVal = document.querySelector('input[name="select-dinner"]:checked')?.value || 'dinner-salmon';
+      const snackChecked = document.getElementById('check-snack')?.checked || false;
+
+      const bfast = mealsData.breakfast[bfastVal];
+      const lunch = mealsData.lunch[lunchVal];
+      const dinner = mealsData.dinner[dinnerVal];
+
+      let totalCal = bfast.cal + lunch.cal + dinner.cal;
+      let totalPro = bfast.pro + lunch.pro + dinner.pro;
+      let totalFib = bfast.fibre + lunch.fibre + dinner.fibre;
+
+      if (snackChecked) {
+        totalCal += 100;
+        totalPro += 4.0;
+        totalFib += 4.0;
+      }
+
+      // Update UI numbers
+      document.getElementById('metric-cal').innerText = totalCal.toLocaleString();
+      document.getElementById('metric-protein').innerText = Math.round(totalPro) + 'g';
+      document.getElementById('metric-fibre').innerText = Math.round(totalFib) + 'g';
+
+      const navBadge = document.getElementById('nav-cal-badge');
+      if (navBadge) navBadge.innerText = `~${totalCal.toLocaleString()} kcal`;
+
+      // Visual progress bars (based on ~1550 target cal, 100g target pro, 28g target fibre)
+      const calPercent = Math.min(100, Math.round((totalCal / 1550) * 100));
+      const proPercent = Math.min(100, Math.round((totalPro / 100) * 100));
+      const fibPercent = Math.min(100, Math.round((totalFib / 28) * 100));
+
+      const calBar = document.getElementById('metric-cal-bar');
+      calBar.style.width = calPercent + '%';
+
+      if (totalCal > 1650) {
+        calBar.className = "bg-amber-500 h-2 rounded-full transition-all duration-300";
+        document.getElementById('calorie-status').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-400 mr-1"></i> Maintenance Range';
+      } else {
+        calBar.className = "bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-300";
+        document.getElementById('calorie-status').innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> Deficit Optimal';
+      }
+
+      document.getElementById('metric-protein-bar').style.width = proPercent + '%';
+      document.getElementById('metric-fibre-bar').style.width = fibPercent + '%';
+    }
+
+    // Tab switcher between the 4 main sections
+    function switchTab(targetViewId) {
+      const views = ['view-planner', 'view-smoothie', 'view-shopping', 'view-guide'];
+      views.forEach(v => {
+        const el = document.getElementById(v);
+        if (el) el.classList.add('hidden');
+      });
+
+      const targetEl = document.getElementById(targetViewId);
+      if (targetEl) targetEl.classList.remove('hidden');
+
+      // Update button active states
+      const tabMap = {
+        'view-planner': 'tab-btn-planner',
+        'view-smoothie': 'tab-btn-smoothie',
+        'view-shopping': 'tab-btn-shopping',
+        'view-guide': 'tab-btn-guide'
+      };
+
+      Object.values(tabMap).forEach(btnId => {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+          btn.className = "nav-tab px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-1.5";
+        }
+      });
+
+      const activeBtn = document.getElementById(tabMap[targetViewId]);
+      if (activeBtn) {
+        activeBtn.className = "nav-tab px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all bg-emerald-500 text-slate-950 shadow-sm flex items-center gap-1.5";
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetShoppingList() {
+      const checkboxes = document.querySelectorAll('#view-shopping input[type="checkbox"]');
+      checkboxes.forEach(cb => cb.checked = false);
+    }
+
+    // Initialize all components on load
+    window.addEventListener('DOMContentLoaded', () => {
+      renderSmoothieTable();
+      updatePlanner();
+
+      // Populate breakfast recipe directly below the card
+      const bfastBox = document.getElementById('recipe-box-smoothie-ideal');
+      if (bfastBox) {
+        bfastBox.innerHTML = getRecipeHTML('smoothie-ideal');
+      }
+
+      // Populate initial recipes directly below active lunch and dinner items
+      const initialLunchBox = document.getElementById('recipe-box-lunch-tuna');
+      if (initialLunchBox) {
+        initialLunchBox.innerHTML = getRecipeHTML('lunch-tuna');
+      }
+
+      const initialDinnerBox = document.getElementById('recipe-box-dinner-salmon');
+      if (initialDinnerBox) {
+        initialDinnerBox.innerHTML = getRecipeHTML('dinner-salmon');
+      }
+    });
+  </script>
+</body>
+</html>
+```
